@@ -1,112 +1,78 @@
-const searchForm = document.getElementById("#search_form");
-const searchInput = document.getElementById("#search_input");
-const clearFormButton = document.getElementById("#clear_form_button");
-const recommendationSearch = document.getElementById("#recommendation_search");
+// Select DOM elements
+const searchInput = document.querySelector("#search-input");
+const searchButton = document.querySelector("#search-button");
+const clearButton = document.querySelector("#clear-button");
+const resultsContainer = document.querySelector("#results-container");
 
-searchForm.addEventListener('submit', handleFormSubmit);
-
-clearFormButton.addEventListener('click', handleFormReset);
-
-async function fetchData() {
-  try {
-    const res = await fetch('/travel_recommendation_api.json');
-
-    const data = await res.json();
-
-    return data;
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-async function getSearchResults() {
-  let searchResults = [];
-  const searchValue = searchInput.value.toLowerCase().trim();
-  const data = await fetchData();
-
-  const dataKeys = Object.keys(data);
-
-  const dataKey = dataKeys.filter((key) => {
-    if (searchValue === key || key.toLowerCase().includes(searchValue)) {
-      return key;
-    }
-  });
-
-  if (dataKey.length > 0) {
-    searchResults = data[dataKey];
-    return searchResults;
-  } else {
-    const dataValues = Object.values(data);
-
-    searchResults = dataValues.map((value) => {
-      let results = value.filter((place) => {
-        if (
-          searchValue === place?.name?.toLowerCase() ||
-          place?.description?.toLowerCase().includes(searchValue) ||
-          place?.name?.toLowerCase().includes(searchValue)
-        ) {
-          return place;
+// Fetch data from the travel_recommendation_api.json
+async function fetchTravelData() {
+    try {
+        const response = await fetch("travel_recommendation_api.json");
+        if (!response.ok) {
+            throw new Error("Failed to fetch the travel data.");
         }
-      });
-
-      return results;
-    });
-
-    searchResults = searchResults.filter((result) => {
-      return result.length > 0;
-    });
-
-    return searchResults[0];
-  }
+        const data = await response.json();
+        console.log("Travel Data:", data); // For debugging
+        return data;
+    } catch (error) {
+        console.error("Error fetching travel data:", error);
+    }
 }
 
-function htmlTemplate(data) {
-  return `
-        <div class="destination">
-            <div class="destination_img">
-                <img src=${data.imageUrl} alt=${data.name}>
+// Filter recommendations based on the keyword
+function filterRecommendations(data, keyword) {
+    const lowerKeyword = keyword.toLowerCase();
+    return data.filter(item => {
+        return (
+            item.type.toLowerCase().includes(lowerKeyword) ||
+            item.name.toLowerCase().includes(lowerKeyword) ||
+            item.description.toLowerCase().includes(lowerKeyword)
+        );
+    });
+}
+
+// Render the recommendations to the DOM
+function renderRecommendations(recommendations) {
+    resultsContainer.innerHTML = ""; // Clear previous results
+    if (recommendations.length === 0) {
+        resultsContainer.innerHTML = "<p>No results found.</p>";
+        return;
+    }
+    recommendations.forEach(item => {
+        const card = document.createElement("div");
+        card.classList.add("recommendation-card");
+        card.innerHTML = `
+            <img src="${item.imageUrl}" alt="${item.name}" class="recommendation-image" />
+            <div class="recommendation-content">
+                <h3>${item.name}</h3>
+                <p>${item.description}</p>
             </div>
-            <div class="destination_info">
-                <h3 class="name">${data.name}</h3>
-                <p class="description">
-                    ${data.description}
-                </p>
-                <button type="button">Visit</button>
-            </div>
-        </div>
         `;
-}
-
-function generateHtmlTemplate(data) {
-  if (data?.cities && data?.cities.length > 1) {
-    const cities = data.cities.map((city) => {
-      return htmlTemplate(city);
+        resultsContainer.appendChild(card);
     });
-
-    return cities.join('');
-  } else {
-    return htmlTemplate(data);
-  }
 }
 
-async function handleFormSubmit(e) {
-  console.log('Form submitted');
-  e.preventDefault();
+// Handle the Search button click
+async function handleSearch() {
+    const keyword = searchInput.value.trim();
+    if (!keyword) {
+        alert("Please enter a keyword to search.");
+        return;
+    }
 
-  const searchResults = await getSearchResults();
-
-  let resultsHTML = searchResults
-    ?.map((result) => {
-      if (result) return generateHtmlTemplate(result);
-
-      return 'Noting found!';
-    })
-    .join('');
-
-  recommendationSearch.innerHTML = resultsHTML;
+    const data = await fetchTravelData();
+    if (data) {
+        const recommendations = filterRecommendations(data, keyword);
+        renderRecommendations(recommendations);
+    }
 }
 
-function handleFormReset() {
-  searchInput.value = '';
-  recommendationSearch.innerHTML = '';
+// Handle the Clear button click
+function handleClear() {
+    searchInput.value = ""; // Clear the search input
+    resultsContainer.innerHTML = ""; // Clear the results container
 }
+
+// Event listeners
+searchButton.addEventListener("click", handleSearch);
+clearButton.addEventListener("click", handleClear);
