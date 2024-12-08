@@ -1,7 +1,7 @@
-const searchForm = document.getElementById('#search_form');
-const searchInput = document.getElementById('#search_input');
-const clearFormButton = document.getElementById('#clear_form_button');
-const recommendationSearch = document.getElementById('#recommendation_search');
+const searchForm = document.getElementById("#search_form");
+const searchInput = document.getElementById("#search_input");
+const clearFormButton = document.getElementById("#clear_form_button");
+const recommendationSearch = document.getElementById("#recommendation_search");
 
 searchForm.addEventListener('submit', handleFormSubmit);
 
