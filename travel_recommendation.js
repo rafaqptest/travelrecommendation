@@ -8,13 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch data from the JSON file
     const fetchData = async () => {
         try {
-            const response = await fetch('https://github.com/rafaqptest/travelrecommendation/blob/main/travel_recommendation_api.json');
-            if (!response.ok) throw new Error('Failed to fetch data.');
+            const response = await fetch('travel_recommendation_api.json');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const data = await response.json();
-            console.log(data); // Debug: Check if data is loaded
+            console.log('Fetched data:', data);
             return data;
         } catch (error) {
             console.error('Error fetching data:', error);
+            alert('Failed to fetch recommendations. Please check your network or server setup.');
             return [];
         }
     };
