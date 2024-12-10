@@ -1,78 +1,68 @@
-// Select DOM elements
-const searchInput = document.querySelector("#search-input");
-const searchButton = document.querySelector("#search-button");
-const clearButton = document.querySelector("#clear-button");
-const resultsContainer = document.querySelector("#results-container");
+// Fetch travel recommendations and implement search functionality
+document.addEventListener('DOMContentLoaded', () => {
+    const searchButton = document.getElementById('search-button');
+    const clearButton = document.getElementById('clear-button');
+    const searchInput = document.getElementById('search-input');
+    const resultsContainer = document.getElementById('results-container');
 
-// Fetch data from the travel_recommendation_api.json
-async function fetchTravelData() {
-    try {
-        const response = await fetch("travel_recommendation_api.json");
-        if (!response.ok) {
-            throw new Error("Failed to fetch the travel data.");
+    // Fetch data from the JSON file
+    const fetchData = async () => {
+        try {
+            const response = await fetch('travel_recommendation_api.json');
+            if (!response.ok) throw new Error('Failed to fetch data.');
+            const data = await response.json();
+            console.log(data); // Debug: Check if data is loaded
+            return data;
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            return [];
         }
-        const data = await response.json();
-        console.log("Travel Data:", data); // For debugging
-        return data;
-    } catch (error) {
-        console.error("Error fetching travel data:", error);
-    }
-}
+    };
 
-// Filter recommendations based on the keyword
-function filterRecommendations(data, keyword) {
-    const lowerKeyword = keyword.toLowerCase();
-    return data.filter(item => {
-        return (
-            item.type.toLowerCase().includes(lowerKeyword) ||
-            item.name.toLowerCase().includes(lowerKeyword) ||
-            item.description.toLowerCase().includes(lowerKeyword)
+    // Render recommendations based on keyword
+    const renderRecommendations = (data, keyword) => {
+        resultsContainer.innerHTML = ''; // Clear previous results
+        const lowerKeyword = keyword.toLowerCase();
+        const matches = data.filter(item =>
+            item.category.toLowerCase().includes(lowerKeyword)
         );
-    });
-}
 
-// Render the recommendations to the DOM
-function renderRecommendations(recommendations) {
-    resultsContainer.innerHTML = ""; // Clear previous results
-    if (recommendations.length === 0) {
-        resultsContainer.innerHTML = "<p>No results found.</p>";
-        return;
-    }
-    recommendations.forEach(item => {
-        const card = document.createElement("div");
-        card.classList.add("recommendation-card");
-        card.innerHTML = `
-            <img src="${item.imageUrl}" alt="${item.name}" class="recommendation-image" />
-            <div class="recommendation-content">
-                <h3>${item.name}</h3>
-                <p>${item.description}</p>
-            </div>
-        `;
-        resultsContainer.appendChild(card);
-    });
-}
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = '<p>No results found.</p>';
+            return;
+        }
 
-// Handle the Search button click
-async function handleSearch() {
-    const keyword = searchInput.value.trim();
-    if (!keyword) {
-        alert("Please enter a keyword to search.");
-        return;
-    }
+        matches.forEach(item => {
+            const recommendation = document.createElement('div');
+            recommendation.className = 'recommendation';
 
-    const data = await fetchTravelData();
-    if (data) {
-        const recommendations = filterRecommendations(data, keyword);
-        renderRecommendations(recommendations);
-    }
-}
+            recommendation.innerHTML = `
+                <img src="${item.imageUrl}" alt="${item.name}" class="recommendation-image" />
+                <div class="recommendation-details">
+                    <h3>${item.name}</h3>
+                    <p>${item.description}</p>
+                </div>
+            `;
+            resultsContainer.appendChild(recommendation);
+        });
+    };
 
-// Handle the Clear button click
-function handleClear() {
-    searchInput.value = ""; // Clear the search input
-    resultsContainer.innerHTML = ""; // Clear the results container
-}
+    // Search functionality
+    const handleSearch = async () => {
+        const keyword = searchInput.value.trim();
+        if (!keyword) return;
 
-// Event listeners
-searchButton.addEventListener("click", handleSearch);
-clearButton.addEventListener("click", handleClear);
+        const data = await fetchData();
+        renderRecommendations(data, keyword);
+    };
+
+    // Clear functionality
+    const clearResults = () => {
+        searchInput.value = '';
+        resultsContainer.innerHTML = '';
+    };
+
+    // Event listeners
+    searchButton.addEventListener('click', handleSearch);
+    clearButton.addEventListener('click', clearResults);
+});
