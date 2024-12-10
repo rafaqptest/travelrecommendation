@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch data from the JSON file
     const fetchData = async () => {
         try {
-            const response = await fetch('travel_recommendation_api.json');
+            const response = await fetch('https://github.com/rafaqptest/travelrecommendation/blob/main/travel_recommendation_api.json');
             if (!response.ok) throw new Error('Failed to fetch data.');
             const data = await response.json();
             console.log(data); // Debug: Check if data is loaded
